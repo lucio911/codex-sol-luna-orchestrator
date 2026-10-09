@@ -137,7 +137,13 @@ def install(*, scope: str, project_root: Path | None = None, home: Path | None =
     skill_dst, agent_dst, cfg_dst = get_destinations(scope, project_root, home)
     agent_src = AGENT_SOURCE.read_text(encoding="utf-8")
     agent_text = re.sub(r'(?m)^model\s*=\s*"[^"]+"\s*$', f'model = "{executor_model}"', agent_src, count=1)
-    agent_text = re.sub(r'(?m)^model_reasoning_effort\s*=\s*"[^"]+"\s*
+    agent_text = re.sub(
+        r'(?m)^model_reasoning_effort\s*=\s*"[^"]+"\s*$',
+        f'model_reasoning_effort = "{executor_effort}"',
+        agent_text, count=1,
+    )
+    tomllib.loads(agent_text)
+    changes = []
     # Preflight all collisions before making any changes.
     skill_same = same_tree(SKILL_SOURCE, skill_dst)
     if skill_dst.exists() and not skill_same and not force:
@@ -199,81 +205,6 @@ def main(argv: list[str] | None = None) -> int:
         messages = install(scope=args.scope, project_root=args.project_root, executor_model=args.executor_model,
                            planner_model=args.primary_model, planner_effort=args.primary_effort,
                            executor_effort=args.executor_effort, configure_defaults=args.configure_defaults,
-                           force=args.force, dry_run=args.dry_run)
-        for message in messages:
-            print(("[dry-run] " if args.dry_run else "") + message)
-        if not args.configure_defaults:
-            print("Tip: use --configure-defaults --primary-model gpt-6.1-sol to opt into primary-model/config edits.")
-        print("Note: file installation does not prove live model routing; verify by spawning the named subagent in Codex.")
-        return 0
-    except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
-        print(f"Installation failed: {exc}", file=sys.stderr)
-        return 1
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-, f'model_reasoning_effort = "{executor_effort}"', agent_text, count=1)
-    tomllib.loads(agent_text)
-    changes = []
-    # Preflight all collisions before making any changes.
-    skill_same = same_tree(SKILL_SOURCE, skill_dst)
-    if skill_dst.exists() and not skill_same and not force:
-        raise FileExistsError(f"Skill already exists with different contents: {skill_dst}. Use --force to back up and replace it.")
-    agent_same = agent_dst.is_file() and agent_dst.read_text(encoding="utf-8") == agent_text
-    if agent_dst.exists() and not agent_same and not force:
-        raise FileExistsError(f"Agent already exists with different contents: {agent_dst}. Use --force to back up and replace it.")
-    if configure_defaults:
-        old_cfg = cfg_dst.read_text(encoding="utf-8") if cfg_dst.exists() else ""
-        new_cfg = desired_config(old_cfg, planner_model=planner_model)
-    else:
-        old_cfg, new_cfg = "", ""
-        if planner_model:
-            raise ValueError("--primary-model requires --configure-defaults")
-
-    if not skill_same:
-        changes.append(f"Install skill -> {skill_dst}")
-        if not dry_run:
-            if skill_dst.exists():
-                destination = backup_path(skill_dst)
-                skill_dst.rename(destination)
-                changes.append(f"Backup prior skill -> {destination}")
-            skill_dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(SKILL_SOURCE, skill_dst)
-    if not agent_same:
-        changes.append(f"Install agent ({executor_model}) -> {agent_dst}")
-        if not dry_run:
-            if agent_dst.exists():
-                destination = backup_path(agent_dst)
-                agent_dst.rename(destination)
-                changes.append(f"Backup prior agent -> {destination}")
-            replace_file_atomic(agent_dst, agent_text)
-    if configure_defaults and old_cfg != new_cfg:
-        changes.append(f"Update Codex configuration -> {cfg_dst}")
-        if not dry_run:
-            if cfg_dst.exists():
-                destination = backup_path(cfg_dst)
-                shutil.copy2(cfg_dst, destination)
-                changes.append(f"Backup prior config -> {destination}")
-            replace_file_atomic(cfg_dst, new_cfg)
-    if not changes:
-        changes.append("Already installed; no changes needed.")
-    return changes
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scope", choices=("user", "project"), default="user")
-    parser.add_argument("--project-root", type=Path, default=None, help="Project root for --scope project; default: current directory")
-    parser.add_argument("--executor-model", default="gpt-6-luna", help="Model ID for luna_executor (default: gpt-6-luna)")
-    parser.add_argument("--configure-defaults", action="store_true", help="Opt in to safely merging multi-agent settings into config.toml")
-    parser.add_argument("--primary-model", default=None, help="Set primary Sol model; requires --configure-defaults")
-    parser.add_argument("--force", action="store_true", help="Back up and replace conflicting skill/agent files")
-    parser.add_argument("--dry-run", action="store_true", help="Show changes without writing files")
-    args = parser.parse_args(argv)
-    try:
-        messages = install(scope=args.scope, project_root=args.project_root, executor_model=args.executor_model,
-                           planner_model=args.primary_model, configure_defaults=args.configure_defaults,
                            force=args.force, dry_run=args.dry_run)
         for message in messages:
             print(("[dry-run] " if args.dry_run else "") + message)
