@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILL_SOURCE = ROOT / ".agents" / "skills" / "sol-luna-orchestrator"
 AGENT_SOURCE = ROOT / "codex" / "agents" / "luna_executor.toml"
 MODEL_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]*$")
+EFFORT_CHOICES = ("low", "medium", "high", "xhigh", "max")
 
 
 def get_destinations(scope: str, project_root: Path | None = None, home: Path | None = None):
@@ -110,24 +111,109 @@ def modify_toml(text: str, values: dict[str, str], section: str | None) -> str:
     return result
 
 
-def desired_config(existing: str, *, planner_model: str | None = None) -> str:
+def desired_config(existing: str, *, planner_model: str | None = None,
+                   planner_effort: str | None = None) -> str:
     result = existing
     if planner_model:
         model = validate_model_id(planner_model)
-        result = modify_toml(result, {"model": f'"{model}"', "model_reasoning_effort": '"high"'}, None)
+        result = modify_toml(result, {"model": f'"{model}"'}, None)
+    if planner_model or planner_effort:
+        effort = planner_effort or "high"
+        if effort not in EFFORT_CHOICES:
+            raise ValueError(f"Unsupported primary reasoning effort: {effort}")
+        result = modify_toml(result, {"model_reasoning_effort": f'"{effort}"'}, None)
     result = modify_toml(result, {"enabled": "true", "max_concurrent_threads_per_session": "2"}, "agents")
     return result
 
-
 def install(*, scope: str, project_root: Path | None = None, home: Path | None = None,
-            executor_model: str = "gpt-6-luna", planner_model: str | None = None,
+            executor_model: str = "gpt-6-luna", executor_effort: str = "high",
+            planner_model: str | None = None, planner_effort: str | None = None,
             configure_defaults: bool = False, force: bool = False, dry_run: bool = False) -> list[str]:
     validate_model_id(executor_model)
     if planner_model:
         validate_model_id(planner_model)
+    if executor_effort not in EFFORT_CHOICES or (planner_effort is not None and planner_effort not in EFFORT_CHOICES):
+        raise ValueError("Reasoning effort must be one of " + ", ".join(EFFORT_CHOICES))
     skill_dst, agent_dst, cfg_dst = get_destinations(scope, project_root, home)
     agent_src = AGENT_SOURCE.read_text(encoding="utf-8")
     agent_text = re.sub(r'(?m)^model\s*=\s*"[^"]+"\s*$', f'model = "{executor_model}"', agent_src, count=1)
+    agent_text = re.sub(r'(?m)^model_reasoning_effort\s*=\s*"[^"]+"\s*
+    # Preflight all collisions before making any changes.
+    skill_same = same_tree(SKILL_SOURCE, skill_dst)
+    if skill_dst.exists() and not skill_same and not force:
+        raise FileExistsError(f"Skill already exists with different contents: {skill_dst}. Use --force to back up and replace it.")
+    agent_same = agent_dst.is_file() and agent_dst.read_text(encoding="utf-8") == agent_text
+    if agent_dst.exists() and not agent_same and not force:
+        raise FileExistsError(f"Agent already exists with different contents: {agent_dst}. Use --force to back up and replace it.")
+    if configure_defaults:
+        old_cfg = cfg_dst.read_text(encoding="utf-8") if cfg_dst.exists() else ""
+        new_cfg = desired_config(old_cfg, planner_model=planner_model, planner_effort=planner_effort)
+    else:
+        old_cfg, new_cfg = "", ""
+        if planner_model or planner_effort:
+            raise ValueError("--primary-model/--primary-effort requires --configure-defaults")
+
+    if not skill_same:
+        changes.append(f"Install skill -> {skill_dst}")
+        if not dry_run:
+            if skill_dst.exists():
+                destination = backup_path(skill_dst)
+                skill_dst.rename(destination)
+                changes.append(f"Backup prior skill -> {destination}")
+            skill_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(SKILL_SOURCE, skill_dst)
+    if not agent_same:
+        changes.append(f"Install agent ({executor_model}, effort={executor_effort}) -> {agent_dst}")
+        if not dry_run:
+            if agent_dst.exists():
+                destination = backup_path(agent_dst)
+                agent_dst.rename(destination)
+                changes.append(f"Backup prior agent -> {destination}")
+            replace_file_atomic(agent_dst, agent_text)
+    if configure_defaults and old_cfg != new_cfg:
+        changes.append(f"Update Codex configuration -> {cfg_dst}")
+        if not dry_run:
+            if cfg_dst.exists():
+                destination = backup_path(cfg_dst)
+                shutil.copy2(cfg_dst, destination)
+                changes.append(f"Backup prior config -> {destination}")
+            replace_file_atomic(cfg_dst, new_cfg)
+    if not changes:
+        changes.append("Already installed; no changes needed.")
+    return changes
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--scope", choices=("user", "project"), default="user")
+    parser.add_argument("--project-root", type=Path, default=None, help="Project root for --scope project; default: current directory")
+    parser.add_argument("--executor-model", default="gpt-6-luna", help="Model ID for luna_executor (default: gpt-6-luna)")
+    parser.add_argument("--executor-effort", choices=EFFORT_CHOICES, default="high", help="Luna reasoning effort")
+    parser.add_argument("--configure-defaults", action="store_true", help="Opt in to safely merging multi-agent settings into config.toml")
+    parser.add_argument("--primary-model", default=None, help="Set primary Sol model; requires --configure-defaults")
+    parser.add_argument("--primary-effort", choices=EFFORT_CHOICES, default=None, help="Primary reasoning effort; requires --configure-defaults")
+    parser.add_argument("--force", action="store_true", help="Back up and replace conflicting skill/agent files")
+    parser.add_argument("--dry-run", action="store_true", help="Show changes without writing files")
+    args = parser.parse_args(argv)
+    try:
+        messages = install(scope=args.scope, project_root=args.project_root, executor_model=args.executor_model,
+                           planner_model=args.primary_model, planner_effort=args.primary_effort,
+                           executor_effort=args.executor_effort, configure_defaults=args.configure_defaults,
+                           force=args.force, dry_run=args.dry_run)
+        for message in messages:
+            print(("[dry-run] " if args.dry_run else "") + message)
+        if not args.configure_defaults:
+            print("Tip: use --configure-defaults --primary-model gpt-6.1-sol to opt into primary-model/config edits.")
+        print("Note: file installation does not prove live model routing; verify by spawning the named subagent in Codex.")
+        return 0
+    except (OSError, ValueError, tomllib.TOMLDecodeError) as exc:
+        print(f"Installation failed: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+, f'model_reasoning_effort = "{executor_effort}"', agent_text, count=1)
     tomllib.loads(agent_text)
     changes = []
     # Preflight all collisions before making any changes.
