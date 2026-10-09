@@ -4,7 +4,7 @@
 
 A **dependency-free, open-source Codex Skill** that coordinates a reasoning-focused primary model for **planning and final review** with a fast, separately configured **Luna implementation subagent**. Built on Codex's *native* skills and custom-subagent mechanisms—not a prompt pretending to change models.
 
-> **Status: v0.1.0 preview.** On-disk installation and configuration are unit tested. Live Sol→Luna model routing must still be verified in your own authorized Codex runtime. Model access varies by product, workspace and account.
+> **Status: v0.1.1 preview.** On-disk installation and configuration are unit tested. Live Sol→Luna model routing must still be verified in your own authorized Codex runtime. Model access varies by product, workspace and account.
 
 ## What it does
 
@@ -65,6 +65,24 @@ delegate bounded implementation to luna_executor, then review the actual diff.
 ```
 
 For another model, change `--executor-model` (or edit the installed `luna_executor.toml`). Do not assume the model ID is available just because the file parses.
+
+## Choosing high vs max reasoning effort
+
+Reasoning effort is configured **independently** for the primary Sol agent and named Luna executor. Supported values for GPT-6.1 Sol / GPT-6 Luna include `low`, `medium`, `high`, `xhigh`, and `max`.
+
+For demanding research and numerical computing, start with **Sol = max, Luna = high**. Use both at `max` only when the additional reasoning demonstrably improves results.
+
+```bash
+# Recommended: Sol max, Luna high
+python scripts/install.py --scope user --configure-defaults --primary-model gpt-6.1-sol --primary-effort max --executor-effort high --force
+
+# Both at max
+python scripts/install.py --scope user --configure-defaults --primary-model gpt-6.1-sol --primary-effort max --executor-effort max --force
+```
+
+Use `--primary-effort high` to switch Sol back to high without changing the model name. Use `--executor-effort max` to switch Luna to max. Changing an already installed Luna file requires `--force`, which backs up the old file. Restart Codex after changing these settings.
+
+**Important:** `mode=quality` and `mode=research` adjust the workflow, **not** the runtime's model reasoning effort. Neither the skill nor its prompt can increase the effort of an already-running primary agent; configure Codex before starting a new session.
 
 ## Installation scopes
 
