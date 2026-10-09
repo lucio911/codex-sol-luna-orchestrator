@@ -1,0 +1,10 @@
+# EXAMPLE ONLY. Do not overwrite an existing ~/.codex/config.toml with this file.
+# Select the primary model explicitly if you wish to change it.
+model = "gpt-6.1-sol"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 2
+# The named `luna_executor` agent independently sets its own model.
+# Avoid setting default_subagent_model globally unless you want it for all agents.
