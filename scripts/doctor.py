@@ -18,11 +18,13 @@ def diagnose(scope: str, project_root: Path | None = None, home: Path | None = N
               "skill_exists": (skill / "SKILL.md").is_file(),
               "agent_exists": agent.is_file(), "config_exists": config.is_file(),
               "agent_model": None, "primary_model": None,
+              "agent_reasoning_effort": None, "primary_reasoning_effort": None,
               "multi_agent_enabled": None, "warnings": []}
     if result["agent_exists"]:
         try:
             agent_data = tomllib.loads(agent.read_text(encoding="utf-8"))
             result["agent_model"] = agent_data.get("model")
+            result["agent_reasoning_effort"] = agent_data.get("model_reasoning_effort")
             if agent_data.get("name") != "luna_executor":
                 result["warnings"].append("Agent name is not luna_executor")
         except (ValueError, OSError) as exc:
@@ -31,6 +33,7 @@ def diagnose(scope: str, project_root: Path | None = None, home: Path | None = N
         try:
             cfg = tomllib.loads(config.read_text(encoding="utf-8"))
             result["primary_model"] = cfg.get("model")
+            result["primary_reasoning_effort"] = cfg.get("model_reasoning_effort")
             result["multi_agent_enabled"] = cfg.get("agents", {}).get("enabled", True)
         except (ValueError, OSError) as exc:
             result["warnings"].append(f"Invalid config TOML: {exc}")
