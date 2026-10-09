@@ -102,6 +102,45 @@ class InstallTests(unittest.TestCase):
         install(scope="project", project_root=self.root)
         self.assertEqual(cfg.read_text(), 'model = "gpt-5"\n')
 
+    def test_independent_efforts(self):
+        install(scope="project", project_root=self.root, configure_defaults=True,
+                planner_model="gpt-6.1-sol", planner_effort="max", executor_effort="high")
+        _, agent, cfg = get_destinations("project", self.root)
+        self.assertEqual(tomllib.loads(cfg.read_text())["model_reasoning_effort"], "max")
+        self.assertEqual(tomllib.loads(agent.read_text())["model_reasoning_effort"], "high")
+        status = diagnose("project", self.root)
+        self.assertEqual(status["primary_reasoning_effort"], "max")
+        self.assertEqual(status["agent_reasoning_effort"], "high")
+
+    def test_executor_max_with_backup(self):
+        install(scope="project", project_root=self.root)
+        _, agent, _ = get_destinations("project", self.root)
+        with self.assertRaises(FileExistsError):
+            install(scope="project", project_root=self.root, executor_effort="max")
+        install(scope="project", project_root=self.root, executor_effort="max", force=True)
+        self.assertEqual(tomllib.loads(agent.read_text())["model_reasoning_effort"], "max")
+        backups = list(agent.parent.glob("luna_executor.toml.bak-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(tomllib.loads(backups[0].read_text())["model_reasoning_effort"], "high")
+
+    def test_primary_only_effort(self):
+        _, _, cfg = get_destinations("project", self.root)
+        cfg.parent.mkdir(parents=True)
+        cfg.write_text('model = "gpt-6.1-sol"\n')
+        install(scope="project", project_root=self.root, configure_defaults=True, planner_effort="max")
+        self.assertEqual(tomllib.loads(cfg.read_text())["model_reasoning_effort"], "max")
+        self.assertEqual(tomllib.loads(cfg.read_text())["model"], "gpt-6.1-sol")
+
+    def test_primary_effort_requires_opt_in(self):
+        with self.assertRaises(ValueError):
+            install(scope="project", project_root=self.root, planner_effort="max")
+        self.assertFalse((self.root / ".codex").exists())
+
+    def test_reject_invalid_effort(self):
+        with self.assertRaises(ValueError):
+            install(scope="project", project_root=self.root, executor_effort="ultra")
+        self.assertFalse((self.root / ".agents").exists())
+
     def test_validator(self):
         self.assertEqual(validate(), [])
 
