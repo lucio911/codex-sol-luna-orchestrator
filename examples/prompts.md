@@ -1,21 +1,88 @@
-# Example prompts (paste into Codex, not your terminal)
+# Ready-to-use prompts
 
-## Daily coding
+**Paste into Codex chat**, not into your terminal. This document contains short prompts for everyday use. For step-by-step installation, detailed examples and troubleshooting, see [English Quick Start](../docs/QUICKSTART.md) or [中文快速入门](../docs/QUICKSTART.zh-CN.md).
 
-`$sol-luna-orchestrator mode=auto. Inspect this Python package, fix the failing unit tests. Use the luna_executor subagent for bounded implementation and review the actual diff before concluding.`
+## 1. Everyday code fix · auto
 
-## Quality review
+~~~text
+$sol-luna-orchestrator mode=auto
+Find and fix failing tests in the current repository.
+Sol plans with explicit acceptance criteria; luna_executor implements scoped
+changes and runs relevant tests; Sol reviews the actual diff and test output.
+Summarize the root cause, changed paths and evidence. Skip the subagent if trivial.
+~~~
 
-`$sol-luna-orchestrator mode=quality. Plan a safe refactor of the data parser, delegate implementation to luna_executor, inspect the tests, then return findings and corrected output.`
+## 2. New feature · quality
 
-## Research and geotechnics
+~~~text
+$sol-luna-orchestrator mode=quality
+Implement a CSV import feature with valid UTF-8, header validation and
+readable errors for malformed rows. Preserve existing APIs.
+Sol plans and reviews; delegate implementation/tests to luna_executor if
+available. Iterate on concrete defects, not vague self-assessments.
+~~~
 
-`$sol-luna-orchestrator mode=research. Audit the cyclic-loading numerical model for physical units, parameter constraints and reproducibility. Let luna_executor implement bounded fixes. Review numerical consistency and compare tests against trusted fixtures. Never invent experimental values.`
+## 3. Multi-file refactor · quality
 
-## Simple task
+~~~text
+$sol-luna-orchestrator mode=quality
+Refactor duplicated logic in the data-processing layer.
+First inspect callers and existing regression coverage, then plan independent
+work packages. luna_executor handles bounded edits and tests.
+Sol must verify that the external behavior remains unchanged.
+~~~
 
-`$sol-luna-orchestrator mode=economy. Rename one variable in one function. Skip delegation if the change is genuinely trivial.`
+## 4. Scientific numerical code · research
 
-## Routing check
+~~~text
+$sol-luna-orchestrator mode=research
+Review the vertical cyclic-loading pile-foundation model in this repository.
+Sol checks governing equations, parameter meanings, boundary conditions,
+and unit conversions. Delegate bounded fixes and tests to luna_executor.
+Sol reviews convergence, reproducibility and actual evidence.
+Never fabricate simulations or experimental measurements.
+~~~
 
-`$sol-luna-orchestrator. If the Codex runtime exposes a subagent spawn tool and luna_executor exists, spawn it to perform a read-only exploration task and report the actual tool result. Explain what evidence is and is not available for the selected model. Do not claim successful delegation otherwise.`
+## 5. Publication-grade figures · research
+
+~~~text
+$sol-luna-orchestrator mode=research
+Create reproducible Python figures from the CSV files already in this folder.
+Plot stress–strain and stiffness degradation, label physical units, and save
+editable/vector outputs. Sol defines acceptance criteria and validates the
+actual source data; Luna implements and tests. Do not invent missing data.
+~~~
+
+## 6. Read-only code audit · quality
+
+~~~text
+$sol-luna-orchestrator mode=quality
+Review the current Git diff for security, regressions, test gaps and unclear
+assumptions. Do not modify any file. Do not delegate an unnecessary execution
+task. Cite file paths and provide actionable severity-ranked findings.
+~~~
+
+## 7. Tiny task · economy
+
+~~~text
+$sol-luna-orchestrator mode=economy
+Update the old command in README to the latest documented installation command.
+Check only the relevant files. If trivial, execute directly rather than
+spawning luna_executor. Report what you actually changed and validated.
+~~~
+
+## 8. Verify named subagent · routing check
+
+~~~text
+$sol-luna-orchestrator mode=auto
+Confirm that a real luna_executor subagent is registered and available.
+If supported, actually delegate a read-only task to list relevant source
+directories, and report the observed invocation/result. If not supported,
+state the limitation without impersonating Luna or claiming a model was used.
+~~~
+
+## 9. Optional default behavior
+
+See [AGENTS.md template](AGENTS.example.md) for a reusable preference that you can merge into your existing user or project instructions.
+
+**Limitations:** Prompt modes are conventions, not native CLI flags. The actual model and effort must be configured separately. A skill does not grant model access or guarantee multi-agent execution.

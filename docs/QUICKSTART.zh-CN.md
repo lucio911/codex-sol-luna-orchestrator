@@ -2,7 +2,7 @@
 
 [返回中文首页](../README.zh-CN.md) · [English Quick Start](QUICKSTART.md) · [更多英文提示词](../examples/prompts.md)
 
-**3 分钟理解：Sol 负责规划和最终审查，Codex 中名为 \`luna_executor\` 的子代理负责限定范围的实现。** 所有下列提示词都应粘贴到 **Codex 对话框**，而不是 PowerShell / 终端。
+**3 分钟理解：Sol 负责规划和最终审查，Codex 中名为 `luna_executor` 的子代理负责限定范围的实现。** 所有下列提示词都应粘贴到 **Codex 对话框**，而不是 PowerShell / 终端。
 
 ## 1. 安装一次
 
@@ -16,7 +16,7 @@ py -3 scripts\install.py --scope user --configure-defaults --primary-model gpt-6
 py -3 scripts\doctor.py --scope user
 ~~~
 
-若已安装但希望更新子代理配置，安装命令可追加 \`--force\`，**旧代理会先被备份**。重新启动 Codex。只对单个项目安装时，使用 \`--scope project --project-root "项目路径"\`；两种范围详见[中文 README](../README.zh-CN.md)。
+若已安装但希望更新子代理配置，安装命令可追加 `--force`，**旧代理会先被备份**。重新启动 Codex。只对单个项目安装时，使用 `--scope project --project-root "项目路径"`；两种范围详见[中文 README](../README.zh-CN.md)。
 
 ### 最简调用
 
@@ -27,7 +27,7 @@ $sol-luna-orchestrator mode=auto
 请列出修改文件、实际运行的测试和仍未解决的问题。
 ~~~
 
-这里的 \`mode=auto\` 是 Skill 的**工作流约定**，不是 Codex 原生 CLI 参数。真正的模型及推理强度由 Codex 配置确定，不能靠提示词直接切换。
+这里的 `mode=auto` 是 Skill 的**工作流约定**，不是 Codex 原生 CLI 参数。真正的模型及推理强度由 Codex 配置确定，不能靠提示词直接切换。
 
 ## 2. 复制一个适合你的任务案例
 
@@ -145,8 +145,8 @@ $sol-luna-orchestrator mode=auto
 
 ## 4. 常见问题
 
-- **Codex 不识别 \`$sol-luna-orchestrator\`：** 先检查安装范围和 Skill 路径，再重启 Codex。确保在对话框而非终端输入。
-- **没有 \`luna_executor\`：** 检查 \`~/.codex/agents/luna_executor.toml\` 或项目级对应路径；确认客户端支持自定义子代理。
+- **Codex 不识别 `$sol-luna-orchestrator`：** 先检查安装范围和 Skill 路径，再重启 Codex。确保在对话框而非终端输入。
+- **没有 `luna_executor`：** 检查 `~/.codex/agents/luna_executor.toml` 或项目级对应路径；确认客户端支持自定义子代理。
 - **访问不到 GPT-6 Luna 或 max：** 改成你的客户端实际支持的模型和推理强度；Skill 本身不会赋予模型权限。
 - **修改后仍使用旧设置：** 重新启动会话。已经运行的主代理通常不会被提示词中途更换推理强度。
 - **想要每次默认使用：** 可将[AGENTS.md 模板](../examples/AGENTS.example.md)中内容按需合并到自己项目或用户级的 Codex 指令中，但这只是偏好指令，不能保证每次都启动子代理。

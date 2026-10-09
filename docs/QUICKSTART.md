@@ -2,7 +2,7 @@
 
 [README](../README.md) · [中文快速入门](QUICKSTART.zh-CN.md) · [More prompts](../examples/prompts.md)
 
-**Sol plans and reviews; a real Codex subagent called \`luna_executor\` performs bounded implementation.** Paste the prompts below into **Codex chat**, not into your shell.
+**Sol plans and reviews; a real Codex subagent called `luna_executor` performs bounded implementation.** Paste the prompts below into **Codex chat**, not into your shell.
 
 ## 1. Install once
 
@@ -16,7 +16,7 @@ python scripts/install.py --scope user --configure-defaults --primary-model gpt-
 python scripts/doctor.py --scope user
 ~~~
 
-Restart Codex. Existing conflicting agent files are not overwritten unless you pass \`--force\`; the installer backs them up. For per-repository setup use \`--scope project --project-root /path/to/project\`.
+Restart Codex. Existing conflicting agent files are not overwritten unless you pass `--force`; the installer backs them up. For per-repository setup use `--scope project --project-root /path/to/project`.
 
 ## 2. First prompt
 
@@ -28,7 +28,7 @@ to luna_executor if the runtime supports the named agent.
 Return changed paths, actual test commands/results, and unresolved issues.
 ~~~
 
-\`mode=auto\` is a **skill prompt convention**, not a Codex CLI parameter. Model routing and reasoning effort come from the installed Codex runtime/configuration, not from words in a prompt.
+`mode=auto` is a **skill prompt convention**, not a Codex CLI parameter. Model routing and reasoning effort come from the installed Codex runtime/configuration, not from words in a prompt.
 
 ## 3. Copyable scenarios
 
@@ -123,7 +123,7 @@ If the client does not expose the model identity, you can verify that a named su
 ## 5. Troubleshooting
 
 - **Skill not found:** confirm installation scope, restart Codex, and invoke in chat rather than the terminal.
-- **Agent unavailable:** inspect the installed \`luna_executor.toml\` and check for native subagent support.
+- **Agent unavailable:** inspect the installed `luna_executor.toml` and check for native subagent support.
 - **Model/effort rejected:** select IDs/efforts actually accessible in your Codex client.
 - **Preferences on every project:** optionally adapt [AGENTS.md example](../examples/AGENTS.example.md) to your own instructions. It cannot force actual model routing.
 - **No tests could run:** the executor should state why; do not label static inspection as passed tests.
