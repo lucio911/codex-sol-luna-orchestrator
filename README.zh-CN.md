@@ -4,7 +4,7 @@
 
 一个面向 Codex 的开源多代理编排 Skill：**Sol 主代理负责规划和独立审查，Luna 子代理负责限定范围内的实现和测试**。核心利用 Codex 原生的 Skills 与自定义子代理 TOML 配置，不依赖额外 MCP 服务或第三方 Python 包。
 
-> **当前版本：v0.1.0 预览版。** 本地文件安装、配置合并与静态校验经过自动化测试；真实 Sol→Luna 子代理模型调用，仍需在你有权限的 Codex 环境中进行联机验证。Skill 本身不会切换模型。
+> **当前版本：v0.1.1 预览版。** 本地文件安装、配置合并与静态校验经过自动化测试；真实 Sol→Luna 子代理模型调用，仍需在你有权限的 Codex 环境中进行联机验证。Skill 本身不会切换模型。
 
 ## 工作流程
 
@@ -60,6 +60,26 @@ Sol 最终检查实际代码变更及结果。不要编造试验数据和测试�
 ```
 
 如果你的 Codex 支持显式查看子代理工具调用或轨迹，请确认真的启动了 `luna_executor`，并核对其模型信息。`doctor.py` 只检查磁盘配置，**不具备线上模型识别能力**。
+
+## 选择 high / max 推理强度
+
+Sol 主代理与 Luna 执行代理可以分别设定 `low`、`medium`、`high`、`xhigh` 或 `max`。一般代码开发建议 `high / high`；复杂科研、数值建模与算法审查建议 **Sol = max，Luna = high**。
+
+推荐方案（Windows PowerShell）：
+
+```powershell
+py -3 scripts\install.py --scope user --configure-defaults --primary-model gpt-6.1-sol --primary-effort max --executor-effort high --force
+```
+
+如果两者都要使用 `max`：
+
+```powershell
+py -3 scripts\install.py --scope user --configure-defaults --primary-model gpt-6.1-sol --primary-effort max --executor-effort max --force
+```
+
+也可仅执行 `--configure-defaults --primary-effort high` 将 Sol 切回 high，不改变模型名称。切换现有 Luna 设置需要 `--force`，脚本会自动备份旧代理文件；完成后请重启 Codex。
+
+注意 `mode=research`、`mode=quality` 是 Skill 工作流模式，**不等于**实际模型的推理强度设置，无法在已经运行的主代理内部通过提示词动态切换到 max。
 
 ## 核心文件
 
