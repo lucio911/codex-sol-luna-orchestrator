@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 - 2026-10-09
+
+- Independently configure primary and executor reasoning effort (low, medium, high, xhigh, max).
+- Show configured efforts in the offline doctor report.
+- Add reasoning-effort regression tests and bilingual usage instructions.
+
+
 ## 0.1.0 - 2026-10-09
 
 - Initial Codex skill with plan/delegate/review/correct workflow.
