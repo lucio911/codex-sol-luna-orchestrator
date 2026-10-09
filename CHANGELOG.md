@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add bilingual quick-start guides with seven copy-paste usage scenarios.
+- Add ready-to-use prompt library and optional AGENTS.md default-workflow template.
+- Link example workflows from both README homepages.
+
+
 ## 0.1.1 - 2026-10-09
 
 - Independently configure primary and executor reasoning effort (low, medium, high, xhigh, max).

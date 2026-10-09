@@ -1,10 +1,25 @@
 # Sol–Luna Orchestrator for Codex
 
-[中文说明](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Examples](examples/prompts.md)
+[**Quick Start & 7 real-world examples**](docs/QUICKSTART.md) · [中文快速入门](docs/QUICKSTART.zh-CN.md) · [Prompt Library](examples/prompts.md) · [Default AGENTS.md template](examples/AGENTS.example.md) · [Changelog](CHANGELOG.md)
 
 A **dependency-free, open-source Codex Skill** that coordinates a reasoning-focused primary model for **planning and final review** with a fast, separately configured **Luna implementation subagent**. Built on Codex's *native* skills and custom-subagent mechanisms—not a prompt pretending to change models.
 
 > **Status: v0.1.1 preview.** On-disk installation and configuration are unit tested. Live Sol→Luna model routing must still be verified in your own authorized Codex runtime. Model access varies by product, workspace and account.
+
+## Try it in 20 seconds
+
+Once installed and after restarting Codex, paste **into Codex chat**:
+
+~~~text
+$sol-luna-orchestrator mode=auto
+Inspect the current repository, plan a safe fix for its failing tests,
+delegate scoped implementation to luna_executor if actually available,
+then review the resulting diff and real test outputs.
+~~~
+
+**Choose a copy-ready use case:** [bug fixes, features, refactoring, geotechnical numerical code, scientific plots, read-only review, and tiny changes](docs/QUICKSTART.md). See also [short English prompt collection](examples/prompts.md) and the [optional AGENTS.md instructions template](examples/AGENTS.example.md).
+
+**Important:** The command above is a **chat prompt**, not a terminal command. A real Codex subagent must exist and have model access; a prompt alone cannot switch models.
 
 ## What it does
 

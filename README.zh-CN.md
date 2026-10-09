@@ -1,10 +1,26 @@
 # Sol–Luna Orchestrator（Codex 双模型协作 Skill）
 
-[English README](README.md) · [示例提示词](examples/prompts.md) · [更新日志](CHANGELOG.md)
+[**中文快速入门与 7 个使用案例**](docs/QUICKSTART.zh-CN.md) · [English Quick Start](docs/QUICKSTART.md) · [更多提示词](examples/prompts.md) · [全局 AGENTS.md 模板](examples/AGENTS.example.md) · [更新日志](CHANGELOG.md)
 
 一个面向 Codex 的开源多代理编排 Skill：**Sol 主代理负责规划和独立审查，Luna 子代理负责限定范围内的实现和测试**。核心利用 Codex 原生的 Skills 与自定义子代理 TOML 配置，不依赖额外 MCP 服务或第三方 Python 包。
 
 > **当前版本：v0.1.1 预览版。** 本地文件安装、配置合并与静态校验经过自动化测试；真实 Sol→Luna 子代理模型调用，仍需在你有权限的 Codex 环境中进行联机验证。Skill 本身不会切换模型。
+
+## 30 秒开始使用
+
+安装并重启 Codex 后，将以下内容**复制到 Codex 对话框**（不是 PowerShell）：
+
+~~~text
+$sol-luna-orchestrator mode=auto
+检查当前项目并修复失败的测试。
+Sol 负责分析、计划与验收；如果实际注册了 luna_executor，
+则让 Luna 执行限定范围的代码修改和测试。
+最后报告实际变更、测试证据以及未解决的问题。
+~~~
+
+**不知道怎么写任务？** 直接打开[中文快速入门与 7 个使用案例](docs/QUICKSTART.zh-CN.md)，选择「Bug 修复」「新功能开发」「复杂重构」「科研数值建模」「科研绘图」「代码审查」或「轻量任务」，复制对应提示词即可。
+
+还可参考[更多英文提示词](examples/prompts.md)；若希望在不同项目中默认采用该工作流，可**选择性合并**[AGENTS.md 模板](examples/AGENTS.example.md)，但提示词不能强制切换实际模型或推理强度。
 
 ## 工作流程
 
